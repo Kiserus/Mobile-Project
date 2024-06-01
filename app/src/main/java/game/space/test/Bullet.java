@@ -10,15 +10,15 @@ public class Bullet {
 
     Bitmap bitmap;
 
-    int diametr;
+    int diametr = 50;
     int x;
     int y;
-    int speed = new Random().nextInt(7) + 2;
+    int speed = 30;
 
-    Bullet(int diametr, int x, Context context) {
+    Bullet(int x, int y, Context context) {
         this.diametr = diametr;
         this.x = x;
-        this.y = -diametr;
-        bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.asteroid_common), diametr, diametr, true);
+        this.y = y;
+        bitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.bullet), diametr, diametr, true);
     }
 }

@@ -1,5 +1,8 @@
 package game.space.test;
 
+import static java.lang.Math.max;
+import static java.lang.Math.sqrt;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -32,11 +35,12 @@ public class Engine {
 
     boolean stopped = false;
     long time = 0;
-    long lastTime = 0;
+    long lastTimeA = 0, lastTimeB = 0;
     double asteroidsPerTime = 100;
+    double bulletsPerTime = 20;
 
     ArrayList<Asteroid> asteroidArrayList = new ArrayList<>();
-    ArrayList<Asteroid> bulletArrayList = new ArrayList<>();
+    ArrayList<Bullet> bulletArrayList = new ArrayList<>();
     Thread DrawThread = new Thread() {
         @Override
         public void run() {
@@ -54,13 +58,23 @@ public class Engine {
                     update(canvas);
 
                     time = System.nanoTime();
-                    if (time - lastTime >= 1e7 * asteroidsPerTime) { // раз в n создаём новый астероид
-                        lastTime = time;
-                        String TAG = "TIME";
-                        Log.i(TAG, lastTime + " " + time);
+
+                    if (time - lastTimeA >= 1e7 * asteroidsPerTime) { // раз в n создаём новый астероид
+                        lastTimeA = time;
+                        String TAG = "Ast";
+                        Log.i(TAG, lastTimeA + " " + time);
                         int diametr = new Random().nextInt(800) + 50;
                         asteroidArrayList.add(new Asteroid(diametr, new Random().nextInt(canvas.getWidth() + diametr) - diametr, context));
                     }
+
+
+                    if (time - lastTimeB >= 1e7 * bulletsPerTime) { // раз в n создаём новый астероид
+                        lastTimeB = time;
+                        String TAG = "Blt";
+                        Log.i(TAG, lastTimeB + " " + time);
+                        bulletArrayList.add(new Bullet((int) (spaceshipImageView.getX() + spaceshipImageView.getWidth() / 2 - 25), (int) spaceshipImageView.getY(), context));
+                    }
+
                     surfaceHolder.unlockCanvasAndPost(canvas);
                 }
             }
@@ -75,26 +89,41 @@ public class Engine {
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.RED);
 
-        /*
-        Iterator <Asteroid> iterator = asteroidArrayList.iterator();
-        while (iterator.hasNext()) {
-            Asteroid asteroid = iterator.next();
-            if (asteroid.y >= canvas.getHeight()) {
-                iterator.remove();
-            } else {
-                canvas.drawBitmap(asteroid.bitmap, asteroid.x, asteroid.y, paint);
-                asteroid.y += asteroid.speed;
-            }
-        }
-        */
-
         for (int i = 0; i < asteroidArrayList.size(); ++i) {
-            if (asteroidArrayList.get(i).y >= canvas.getHeight() - 200) {
+            if (asteroidArrayList.get(i).y >= canvas.getHeight()) {
                 asteroidArrayList.remove(i);
                 i--;
             } else {
                 canvas.drawBitmap(asteroidArrayList.get(i).bitmap, asteroidArrayList.get(i).x, asteroidArrayList.get(i).y, paint);
                 asteroidArrayList.get(i).y += asteroidArrayList.get(i).speed;
+            }
+        }
+
+        for (int i = 0; i < bulletArrayList.size(); ++i) {
+            if (bulletArrayList.get(i).y < 0) {
+                bulletArrayList.remove(i);
+                i--;
+            } else {
+                canvas.drawBitmap(bulletArrayList.get(i).bitmap, bulletArrayList.get(i).x, bulletArrayList.get(i).y, paint);
+                bulletArrayList.get(i).y -= bulletArrayList.get(i).speed;
+            }
+        }
+
+        for (int i = 0; i < bulletArrayList.size(); ++i) {
+            for (int j = 0; j < asteroidArrayList.size(); ++j) {
+                int xa = asteroidArrayList.get(j).diametr / 2 + asteroidArrayList.get(j).x;
+                int ya = asteroidArrayList.get(j).diametr / 2 + asteroidArrayList.get(j).y;
+                int xb = bulletArrayList.get(i).diametr / 2 + bulletArrayList.get(i).x;
+                int yb = bulletArrayList.get(i).diametr / 2 + bulletArrayList.get(i).y;
+                if (sqrt((xa - xb) * (xa - xb) + (ya - yb) * (ya - yb)) <= (bulletArrayList.get(i).diametr + asteroidArrayList.get(j).diametr) / 2) {
+                    String TAG = "DEL";
+                    Log.i(TAG, "Delated");
+                    bulletArrayList.remove(i);
+                    i = max(0, i - 1);
+                    asteroidArrayList.remove(j);
+                    j = max(0, j - 1);
+
+                }
             }
         }
     }
